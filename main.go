@@ -20,13 +20,39 @@ func main() {
 			return
 		}
 
+		// get the original URL from the database
+		var originalURL string
+		originalURL, err := getOriginalURL(query)
+
+		if err != nil {
+			http.Error(w, "URL not found", http.StatusNotFound)
+			fmt.Println("Error querying database:", err)
+			return
+		}
+
+		// if the request is a POST, shorten the URL
 		if r.Method == http.MethodPost {
-			fmt.Fprintf(w, "Shortened URL for %q", query)
+			fmt.Fprintf(w, "Shortened URL for %q", originalURL)
 			return
 		}
 
 		//redirect to the original URL
-		http.Redirect(w, r, query, http.StatusFound)
+		http.Redirect(w, r, originalURL, http.StatusFound)
+	})
+
+	http.HandleFunc("/shorten", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+			return
+		}
+		query := r.URL.Query().Get("q")
+		if query == "" {
+			http.Error(w, "Missing query parameter", http.StatusBadRequest)
+			return
+		}
+		shortenedURL := generateShortURL(query)
+
+		fmt.Fprintf(w, "Shortened URL for %q is %q", query, shortenedURL)
 	})
 
 	http.HandleFunc("/", helloHandler)
