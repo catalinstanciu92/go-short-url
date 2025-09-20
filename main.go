@@ -52,7 +52,9 @@ func main() {
 		}
 		shortenedURL := generateShortURL(query)
 
-		fmt.Fprintf(w, "Shortened URL for %q is %q", query, shortenedURL)
+		// respond with json
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"shortened_url": "%s"}`, shortenedURL)
 	})
 
 	http.HandleFunc("/", helloHandler)
